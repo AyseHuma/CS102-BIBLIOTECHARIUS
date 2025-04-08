@@ -1,48 +1,56 @@
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 
-public class App
-{
+public class App extends Application{
+    public int points = 0; 
+    public static ArrayList<Category> questionCat = new ArrayList<Category>();
+    public Question[] questionTypes = {new MultipleChoice(), new OpenEnded(), new YesNo()};
+
     public static void main(String[] args)
     {
-        ArrayList<String> tconsts = new ArrayList<>();
-        //       Don't forget to close them both in order to avoid leaks.
-        try
-        (
-        // create a database connection
-        Connection connection = DriverManager.getConnection("jdbc:sqlite:sample.db");
-        Statement statement = connection.createStatement();
-        )
-        {
-        
-            statement.setQueryTimeout(30);  // set timeout to 30 sec.
-            ResultSet rs = statement.executeQuery("select * from ratings where averageRating>9.5");
-            
-            while(rs.next()){
-                if (rs.getInt("numVotes") > 1000) {
-                    tconsts.add(rs.getString("tconst"));
-                }
-            }
+        Movie.fillTconstsFromIMDB(8.5, 25000);
+        launch(args);
 
-            rs = statement.executeQuery("select * from basics");
+        // Movie m = new Movie();
+        // Type d = new TypeDate(m, new MultipleChoice());
+        // Question q = new MultipleChoice(m, d);
+        // q.askQuestion();
+        // Movie movie2 = new Movie(); 
+        // Type type2 = new TypeGenre(movie2, new MultipleChoice());
+        // Question question2 = new MultipleChoice(movie2, type2);
+        // question2.askQuestion();
+        // Type type25 = new TypeGenre(movie2, new YesNo());
+        // Question question3 = new YesNo(movie2, type25);
+        // question3.askQuestion();
+    }
 
-            int i = 0;
-            while(rs.next()){
-                if(rs.getString("tconst").equals(tconsts.get(i)) && !rs.getString("titleType").equals("tvEpisode")){
-                    i ++;
-                    System.out.println(rs.getString("primaryTitle"));
-                }
-            }        
-        }
-        catch(SQLException e)
-        {
-        // if the error message is "out of memory",
-        // it probably means no database file is found
-        e.printStackTrace(System.err);
-        }
+    @Override
+    public void start(Stage stage) throws Exception {
+        // for(int i = 0; i<2; i++){
+        //     questionCat.add(new Movie());   
+        // }
+
+        // Movie m = new Movie();
+        // Type d = new TypeDate(m, new MultipleChoice());
+        // Question q = new MultipleChoice(m, d);
+
+        // Type d = new TypeDate(questionCat.get(0), new MultipleChoice());
+        // Question q = new MultipleChoice(questionCat.get(0), d);
+        // questionCat.remove(0);
+
+        Movie m = new Movie();
+        Type d = new TypeName(m, new OpenEnded());
+        Question q = new OpenEnded(m, d);
+
+        // Type d = new TypeDate(questionCat.get(0), new OpenEnded());
+        // Question q = new OpenEnded(questionCat.get(0), d);
+        // questionCat.remove(0);
+
+        Scene s = new Scene(q.askQuestion(stage), 500, 500);
+        stage.setTitle("BIBLIOTHECARIUS");
+        stage.setScene(s);
+        stage.show();
     }
 }

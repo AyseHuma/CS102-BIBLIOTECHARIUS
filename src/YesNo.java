@@ -1,0 +1,88 @@
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
+public class YesNo extends Question{
+
+    private String answerInQuestion; 
+
+    public YesNo(){
+        question = "yesno has no parameters"; 
+        answer = "yesno has no parameters";
+    }
+
+    public YesNo (Category category, Type type){  // also input the type object
+        super(type, category);    // if this were a YESNO I would also use the wrongAnswer 
+        answerInQuestion = type.getWrongAnswer(); 
+    }
+
+    @Override
+    public VBox askQuestion(Stage stage) {
+        VBox vbox = new VBox(20);
+
+        TextArea timerTextArea = new TextArea("Timer here");
+        timerTextArea.setPrefHeight(25);
+
+        TextArea usernamesTextArea = new TextArea("Usernames here");
+        usernamesTextArea.setPrefHeight(25);
+
+        TextArea questionTextArea = new TextArea(question);
+        questionTextArea.setEditable(false);
+        questionTextArea.setPrefHeight(100);
+
+        Button[] choiceButtons = new Button[4];
+
+        choiceButtons[0] = new Button("Yes");
+        choiceButtons[1] = new Button("No");
+
+        System.out.println(answer);
+        System.out.println(answerInQuestion);
+
+        if(answer.contains(answerInQuestion)){    // if the answer is yes
+            choiceButtons[0].setOnAction(createRightAction(stage));
+            choiceButtons[1].setOnAction(createWrongAction(stage));
+        } 
+        else{   // if the answer is no 
+            choiceButtons[0].setOnAction(createWrongAction(stage));
+            choiceButtons[1].setOnAction(createRightAction(stage));
+        }    
+
+        vbox.getChildren().addAll(timerTextArea, usernamesTextArea, questionTextArea, choiceButtons[0], choiceButtons[1]);
+
+        return vbox;
+    }
+
+    private EventHandler<ActionEvent> createRightAction(Stage stage){
+        return (new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                System.out.println("RIGHT");
+                // Type d = new TypeDate(App.questionCat.get(0), new MultipleChoice());
+                // Question q = new MultipleChoice(App.questionCat.get(0), d);
+                // App.questionCat.remove(0);
+                // Scene s = new Scene(q.askQuestion(stage), 500, 500);
+                // stage.setScene(s);                
+            }
+        });
+    }
+
+    private EventHandler<ActionEvent> createWrongAction(Stage stage){
+        return (new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                System.out.println("WRONG");
+                // Type d = new TypeDate(App.questionCat.get(0), new MultipleChoice());
+                // Question q = new MultipleChoice(App.questionCat.get(0), d);
+                // App.questionCat.remove(0);
+                // Scene s = new Scene(q.askQuestion(stage), 500, 500);
+                // stage.setScene(s);   
+            }
+        });
+    }
+
+}

@@ -1,9 +1,16 @@
+import java.util.Scanner;
+
 public class ClientTester {
     public static void main(String[] args) {
         ClientConnection client = new ClientConnection();
 
-        if (client.connect("localhost", 12345)) {
+        if (client.connect("139.179.26.85", 12345)) {
             System.out.println("Connected to the server!");
+
+            Scanner in = new Scanner(System.in);
+            String username = in.nextLine();
+            String pass = in.nextLine();
+            client.sendMessage("SIGN_UP_REQUEST:" + username + ":" + pass);
 
             // Listen for the welcome message
             new Thread(() -> {

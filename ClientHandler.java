@@ -3,6 +3,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.security.NoSuchAlgorithmException;
+import java.sql.SQLException;
 
 public class ClientHandler implements Runnable{
     private Socket socket;
@@ -30,7 +32,32 @@ public class ClientHandler implements Runnable{
                 if (inputLine.equals("MATCH_REQUEST")) 
                 {
                     matchmakingManager.queuePlayer(this);
-                }else
+                }
+                else if(inputLine.substring(0,16).equals("SIGN_IN_REQUEST:")){
+                    String[] list = inputLine.split(":");
+                    String name = list[1];
+                    String pass = list[2];
+                    if(AccountDb.authenticateUser(name, pass))
+                    {
+                        int userID = AccountDb.getUserIdByName(name);
+                        System.out.println("SIGNED_IN");
+                    }
+                    else{
+                        System.out.println("FAILED_SIGN_IN");
+                    }
+                }      
+                else if(inputLine.substring(0,16).equals("SIGN_UP_REQUEST:")){
+                    String[] list = inputLine.split(":");
+                    String name = list[1];
+                    String pass = list[2];
+                    if(AccountDb.addUser(name,pass,null)){
+                        System.out.println("SIGNED_UP");
+                    }
+                    else{
+                        System.out.println("FAILED_SIGNED_UP");
+                    }
+                }                  
+                else
                 {
                     out.println("Server: " + inputLine);
                 }
@@ -38,6 +65,12 @@ public class ClientHandler implements Runnable{
 
         } catch (IOException e) 
         {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (SQLException e) {
+            System.out.println("xd");
             e.printStackTrace();
         } finally 
         {

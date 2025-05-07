@@ -122,6 +122,52 @@ public class AccountDb {
         }
     }
 
+    public static void deleteUser(int userId) throws SQLException {
+        String deleteFriendsSql = "DELETE FROM friends WHERE user_id = ? OR friend_id = ?;";
+        String deleteScoresSql = "DELETE FROM scores WHERE user_id = ?;";
+        String deleteLeaderboardSql = "DELETE FROM leaderboard WHERE user_id = ?;";
+        String deleteUserSql = "DELETE FROM UserAccounts WHERE ID = ?;";
+
+        try (Connection conn = connect();
+             PreparedStatement deleteFriendsStatement = conn.prepareStatement(deleteFriendsSql);
+             PreparedStatement deleteScoresStatement = conn.prepareStatement(deleteScoresSql);
+             PreparedStatement deleteLeaderboardStatement = conn.prepareStatement(deleteLeaderboardSql);
+             PreparedStatement deleteUserStatement = conn.prepareStatement(deleteUserSql)) {
+
+            conn.setAutoCommit(false);
+
+            /* Deletes friends both ways */
+            deleteFriendsStatement.setInt(1, userId);
+            deleteFriendsStatement.setInt(2, userId);
+            deleteFriendsStatement.executeUpdate();
+
+            /* Deletes scores */
+            deleteScoresStatement.setInt(1, userId);
+            deleteScoresStatement.executeUpdate();
+
+            /* Deletes leaderboard record */
+            deleteLeaderboardStatement.setInt(1, userId);
+            deleteLeaderboardStatement.executeUpdate();
+            
+            /* Deletes the user from the user table */
+            deleteUserStatement.setInt(1, userId);
+            int rows = deleteUserStatement.executeUpdate();
+
+            // Number of rows affected by the change, so rows == 1 if a user is deleted, 0 if not
+
+            if (rows > 0)
+            {
+                System.out.println("User deleted successfully.");
+                conn.commit(); // finalizes the change in db
+            }
+            else
+            {
+                System.out.println("No user found with that ID.");
+                conn.rollback(); // reloads to last save
+            }
+        }
+    }
+
     public static boolean authenticateUser(String name, String password) throws SQLException, NoSuchAlgorithmException {
         String hashedPassword = hashPassword(password);
         String sql = "SELECT * FROM UserAccounts WHERE NAME = ? AND PASSWORD = ?;";

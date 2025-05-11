@@ -82,6 +82,7 @@ public class AccountDb {
                 System.out.println("Login failed.");
             }
         }
+        LeaderboardPage.displayLeaderboard("Book");
         sc.close();
     }
 
@@ -191,20 +192,20 @@ public class AccountDb {
         }
     }
 
-    public static void addFriend(int userId, int friendId) throws SQLException {
+    public static int addFriend(int userId, int friendId) throws SQLException {
         if (userId == friendId) {
             System.out.println("Cannot add yourself as a friend.");
-            return;
+            return -2;
         }
 
         if(!userExists(friendId)){
             System.out.println("That user does not exist.");
-            return;
+            return -1;
         }
 
         if (areAlreadyFriends(userId, friendId)) {
             System.out.println("You are already friends.");
-            return;
+            return 0;
         }
 
         String sql = "INSERT INTO friends(user_id, friend_id) VALUES (?, ?);";
@@ -225,6 +226,7 @@ public class AccountDb {
             conn.commit();
             System.out.println("Friend added successfully.");
         }
+        return 1;
     }
 
     public static void removeFriend(int userId, int friendId) throws SQLException {
@@ -341,4 +343,55 @@ public class AccountDb {
             }
         }
     }
+
+       public static String getLeaderboard(String category) throws SQLException {
+
+        String result = new String();
+
+        String leaderboardSQL = """
+            SELECT ua.NAME, lb.rank, sc.points
+            FROM leaderboard lb
+            JOIN UserAccounts ua ON lb.user_id = ua.ID
+            JOIN scores sc ON lb.user_id = sc.user_id AND lb.category = sc.category
+            WHERE lb.category = ?
+            ORDER BY lb.rank ASC; """;
+
+        try (Connection conn = connect();
+             PreparedStatement statement = conn.prepareStatement(leaderboardSQL)) {
+
+            statement.setString(1, category);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) 
+            {
+                String name = rs.getString("NAME");
+                int rank = rs.getInt("rank");
+                int points = rs.getInt("points");
+                result += rank + ". " + name + " - " + points + " points\n";
+            }
+        }
+        return result;
+    }
+
+    public static String[] loadFriendList(int userId) throws SQLException {
+        String sql = """
+            SELECT ua.NAME
+            FROM friends F
+            JOIN UserAccounts ua ON F.friend_id = ua.ID
+            WHERE F.user_id = ?;
+        """;
+
+        try (Connection conn = connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+
+            java.util.List<String> friendNames = new java.util.ArrayList<>();
+            while (rs.next()) {
+                friendNames.add(rs.getString("NAME"));
+            }
+
+            return friendNames.toArray(new String[0]);
+        }
+    }
+
 }

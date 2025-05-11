@@ -84,7 +84,7 @@ public class ClientTester extends Application{
         // stage.setScene(s);
         // stage.show();
 
-        if (client.connect("172.27.16.1", 12345)) {
+        if (client.connect("192.168.48.174", 12345)) {
             System.out.println("Connected to the server!");
             showMainPage();
 
@@ -300,6 +300,12 @@ public class ClientTester extends Application{
 
     public void showLoadingPage(){
         new LoadingPage(this).show(primaryStage);
+    }
+    public void showCreditsPage(){
+        new CatalogPage(this).show(primaryStage);
+    }
+    public void showTutorialPage(){
+        new CatalogPage(this).show(primaryStage);
     }
 
     public void showMovieSubcategoryPage(){

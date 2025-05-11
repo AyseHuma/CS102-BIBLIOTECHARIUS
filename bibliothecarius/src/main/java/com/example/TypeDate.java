@@ -23,6 +23,7 @@ public class TypeDate extends Type{
         }
         acceptableAnswers.add("" + c.getReleaseDate());
         answer = "" + c.getReleaseDate();
+        question += acceptableAnswers + "?"; // TODO delete
     }
 
     protected String wrongOrRightAnswer(Category c){   // creates and returns a wrongAnswer String that stores the answer that is given in the question

@@ -22,6 +22,7 @@ public class TypeName extends Type{
         }
         acceptableAnswers = (ArrayList<String>)(c.getCreators().clone()); 
         answer = "" + c.getCreators();
+        question += acceptableAnswers + "?"; 
     }
 
     @Override

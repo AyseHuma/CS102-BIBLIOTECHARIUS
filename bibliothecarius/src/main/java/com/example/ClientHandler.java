@@ -18,10 +18,14 @@ public class ClientHandler implements Runnable{
     private static MatchmakingManager matchmakingManager = new MatchmakingManager();
     private GameSession gameSession; 
     public int gamePoint; 
+    public String lastCategory; 
+    public String myUsername; 
+    private boolean goOn; 
 
     public ClientHandler(Socket socket) 
     {
         this.socket = socket;
+        goOn = true; 
     }
     public void run()
     {
@@ -34,12 +38,15 @@ public class ClientHandler implements Runnable{
             
             // Wait for matchmaking requests or other messages
             String inputLine;
-            while ((inputLine = in.readLine()) != null) 
+            while (goOn && (inputLine = in.readLine()) != null) 
             {
                 System.out.println("Received: " + inputLine);
-                if (inputLine.length() == "MATCH_REQUEST".length() && inputLine.equals("MATCH_REQUEST")) 
+                if (inputLine.length() > "MATCH_REQUEST".length() && inputLine.substring(0,14).equals("MATCH_REQUEST:")) 
                 {
-                    matchmakingManager.queuePlayer(this);
+                    int lastColon = inputLine.lastIndexOf(":");
+                    String subcat = inputLine.substring(lastColon + 1);
+                    String category = inputLine.substring(14, lastColon);
+                    matchmakingManager.queuePlayer(this, category, subcat);  // TODO separate methods would work better
                 }
                 else if(inputLine.length() > "SIGN_IN_REQUEST".length() && inputLine.substring(0,16).equals("SIGN_IN_REQUEST:")){
                     String[] list = inputLine.split(":");
@@ -49,33 +56,39 @@ public class ClientHandler implements Runnable{
                     {
                         int userID = AccountDb.getUserIdByName(name);
                         username = name; 
-                        out.println("SIGNED_IN");
+                        out.println("SIGNED_IN:" + username);
                     }
                     else{
                         out.println("FAILED_SIGN_IN");
                     }
-                }      
+                }  
                 else if(inputLine.length() > "SIGN_UP_REQUEST".length() && inputLine.substring(0,16).equals("SIGN_UP_REQUEST:")){
                     String[] list = inputLine.split(":");
                     String name = list[1];
                     String pass = list[2];
                     if(AccountDb.addUser(name,pass,null)){
                         username = name; 
-                        out.println("SIGNED_UP");
+                        out.println("SIGNED_UP:" + username);
                     }
                     else{
                         out.println("FAILED_SIGNED_UP");
                     }
                 }
                 else if (inputLine.length() > "ANSWER".length() && inputLine.substring(0,7).equals("ANSWER:")) {
-                    String answer = inputLine.substring(7);
+                    int index = inputLine.substring(7).indexOf(":") + 7; // this finds the colon that separates Q12 from Yes etc
+                    String answer = inputLine.substring(index + 1);
+                    String ID = inputLine.substring(8, index);
                     if (gameSession != null) {   // checks this if the client is in a battle
-                        gameSession.checkAnswer(this, answer);
+                        gameSession.checkAnswer(this, answer, ID);
                     }
                 }
-                // else if(inputLine.substring(0,16).equals("SIGN_UP_REQUEST:")){
-                    
-                // }              
+                else if(inputLine.equals("CANCEL_MATCH_REQUEST")){
+                    matchmakingManager.removePlayer(this);
+                } 
+                else if(inputLine.equals("DISCONNECT")){
+                    goOn = false; 
+                    disconnect(); 
+                }             
                 else
                 {
                     out.println("Server: " + inputLine);
@@ -93,9 +106,22 @@ public class ClientHandler implements Runnable{
             e.printStackTrace();
         } finally 
         {
-            try { socket.close(); } catch (IOException e) {}
-            ServerMain.connectedClients.remove(this); // it removes the connection from connectedClients
+            disconnect();
         }
+    }
+
+    public void disconnect() {
+        try {
+            if (socket != null) socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        ServerMain.connectedClients.remove(this);
+        matchmakingManager.removePlayer(this);
+        if(gameSession != null){
+            gameSession.playerDisconnected(this);
+        }
+        System.out.println("Player " + getUsername() + " disconnected.");
     }
 
     public void setOpponent(ClientHandler opponent) 

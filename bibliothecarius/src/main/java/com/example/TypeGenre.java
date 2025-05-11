@@ -22,6 +22,7 @@ public class TypeGenre extends Type{
         }
         acceptableAnswers = (ArrayList<String>)(c.getGenresArr().clone()); 
         answer = "" + c.getGenres();
+        question += acceptableAnswers + "?"; 
     }
 
     protected String wrongOrRightAnswer(Category c){   // creates and returns a wrongAnswer String that stores the answer that is given in the question

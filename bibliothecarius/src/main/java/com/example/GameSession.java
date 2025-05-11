@@ -1,35 +1,119 @@
 package com.example;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.TimerTask;
+import java.util.Timer; 
 
 public class GameSession {
     private ClientHandler player1;
     private ClientHandler player2;
     private int currentQuestionIndex = 0; 
+    private GameTimer gameTimer; 
+    private int falseAnswered; 
+    private String subcat; 
 
     private ArrayList<Question> questions = new ArrayList<Question>();
-    private ArrayList<String> correctAnswers;
 
-    public GameSession(ClientHandler player1, ClientHandler player2) 
+    public GameSession(ClientHandler player1, ClientHandler player2, String category, String subcat) 
     {
         this.player1 = player1;
         this.player2 = player2;
         player1.gamePoint = 0; 
         player2.gamePoint = 0; 
-        loadQuestions();  // Load questions (you can replace this with a database or an API)
+        this.subcat = subcat; 
+        if (category.equals("BOOK")){
+            loadQuestionsBook();
+        }
+        else if (category.equals("MOVIE")){
+            loadQuestionMovie();
+        }
+        else{
+            System.out.println("No such category");
+        }  
     }
 
-    private void loadQuestions()
+    private void loadQuestionsBook()
     {
-        Book.fillBookIDFromGoodbooks(3.2, 1000);
-        fillQuestions();
+        double minRating;
+        int minVotes;
+
+        switch (subcat) {
+            case "Top_100_Books":
+                minRating = 4.2;
+                minVotes = 50000	;
+                break;
+
+            case "Top_250_Books":
+                minRating = 4.0;
+                minVotes = 25000;
+                break;
+
+            default:
+                System.out.println("WRONG SUBCAT");
+                minRating = 4.0;
+                minVotes = 25000;
+                break;
+        }
+        Book.fillBookIDFromGoodbooks(minRating, minVotes);
+        fillQuestions("BOOK");
     }
 
-    public void fillQuestions(){ // TODO inside here filter with categories by parameters maybe. Filter the movie and books. Filter top 200 etc inside the constructor
-        for(int i = 0; i<5; i++){
-            questions.add(makeRandomTypeQuestion(new Book()));
-        }                
+    private void loadQuestionMovie(){
+        double minRating;
+        int minVotes;
+        boolean isMovie;
+
+        switch (subcat) {
+            case "Top_100_Movies":
+                minRating = 8.0;
+                minVotes = 50000;
+                isMovie = true;
+                break;
+
+            case "Top_250_Movies":
+                minRating = 7.5;
+                minVotes = 25000;
+                isMovie = true;
+                break;
+
+            case "Top_100_Series":
+                minRating = 8.2;
+                minVotes = 20000;
+                isMovie = false;
+                break;
+
+            case "Top_250_Series":
+                minRating = 7.5;
+                minVotes = 10000;
+                isMovie = false;
+                break;
+            default:
+                System.out.println("WRONG SUBCAT");
+                minRating = 8.0;
+                minVotes = 50000;
+                isMovie = true;
+                break;
+        }
+        Movie.fillTconstsFromIMDB(minRating, minVotes, isMovie);
+        fillQuestions("MOVIE");
+    }
+
+    public void fillQuestions(String category){ // TODO inside here filter with categories by parameters maybe. Filter the movie and books. Filter top 200 etc inside the constructor
+        if (category.equals("BOOK")){
+            for(int i = 0; i<5; i++){
+                questions.add(makeRandomTypeQuestion(new Book()));
+            }  
+        }
+        else if (category.equals("MOVIE")){
+            for(int i = 0; i<5; i++){
+                questions.add(makeRandomTypeQuestion(new Movie()));
+            } 
+        }
+        else{
+            System.out.println("No such category");
+        }                      
     }
 
     public static Question makeRandomTypeQuestion(Category c){
@@ -85,44 +169,100 @@ public class GameSession {
 
     public void startGame() 
     {
+        gameTimer = new GameTimer(60);
+        gameTimer.startTimer();
         sendNextQuestion();
     }
 
     private void sendNextQuestion() {
+        falseAnswered = 0; 
         if (currentQuestionIndex < questions.size()) 
         {
             String q = questions.get(currentQuestionIndex).getQuestionMessage();
-            player1.sendMessage("QUESTION:" + q);
-            player2.sendMessage("QUESTION:" + q);
+            player1.sendMessage("QUESTION:Q" + currentQuestionIndex + ":" + q + ":" + gameTimer.getTimeLeft() + ":" + player1.gamePoint + ":" + player2.gamePoint);
+            player2.sendMessage("QUESTION:Q" + currentQuestionIndex + ":" + q + ":" + gameTimer.getTimeLeft() + ":" + player2.gamePoint + ":" + player1.gamePoint);
         } else 
         {
             endGame();  // No more questions, end the game
         }
     }
-    public void checkAnswer(ClientHandler player, String answer)
+    public synchronized void checkAnswer(ClientHandler player, String answer, String ID)  // THIS SYNCHRONIZED IS KEY!!! IT ENSURES THAT THE CLIENTHANDLERS CALL IT INDIVIDUALLY
     {
         boolean isCorrect = false;
 
         if (currentQuestionIndex < questions.size()) 
         {
-            if (questions.get(currentQuestionIndex).containsAnswer(answer)) 
+            if ((currentQuestionIndex + "").equals(ID) && questions.get(currentQuestionIndex).containsAnswer(answer)) 
             {
                 isCorrect = true;
                 player.morePoints();
+                falseAnswered = 0;
+            }
+            else if ((currentQuestionIndex + "").equals(ID) && !questions.get(currentQuestionIndex).containsAnswer(answer)){
+                falseAnswered++; 
+            }
+            else{
+                return; // this means that the question index does not match the ID, so this checkAnswer is ignored. 
             }
         }
         String resultMessage = isCorrect ? "CORRECT" : "INCORRECT";
         player1.sendMessage("ANSWERED_" + resultMessage + ":" + player.getUsername());
         player2.sendMessage("ANSWERED_" + resultMessage + ":" + player.getUsername());
 
-        currentQuestionIndex++;
-        sendNextQuestion();
+        if(falseAnswered != 1){  // this can either be 0 or 2. If it is 0, the person got it first correctly. If it is 2, both tried and got incorrect. If it is 1, one of them answered incorrectly. 
+            currentQuestionIndex++;
+            sendNextQuestion();
+        }
     }
     private void endGame() 
     {
-        player1.sendMessage("GAME_OVER: ");
-        player2.sendMessage("GAME_OVER: ");
-
+        player1.setGameSession(null);
+        player2.setGameSession(null);
+        player1.sendMessage("GAME_OVER:" + player1.gamePoint + ":" + player2.gamePoint);
+        player2.sendMessage("GAME_OVER:" + player2.gamePoint + ":" + player1.gamePoint);
+        gameTimer.stopTimer();
         // Optionally: Send final scores to the leaderboard
+    }
+
+    public void playerDisconnected(ClientHandler disconnectedPlayer){
+        player1.sendMessage("OPPONENT_DISCONNECTED");
+        player2.sendMessage("OPPONENT_DISCONNECTED");
+        endGame();
+    }
+
+    private class GameTimer {
+
+        private int timeLeft; 
+        private Timer timer;
+
+        public GameTimer(int i){
+            timer = new Timer();
+            timeLeft = i; 
+        }
+
+        public void startTimer(){
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    timeLeft --;
+                    if(timeLeft > 0 && timeLeft == 5){
+                        player1.sendMessage("GAME_TIMER:" + timeLeft);
+                        player2.sendMessage("GAME_TIMER:" + timeLeft);
+                    }
+                    else if (timeLeft <= 0){
+                        endGame();   // endGame already closes the timer
+                    }
+                }  
+            }, 0, 1000);
+        }
+
+        public void stopTimer(){
+            timeLeft = 0; 
+            timer.cancel();
+        }
+
+        public int getTimeLeft(){
+            return timeLeft;
+        }
     }
 }

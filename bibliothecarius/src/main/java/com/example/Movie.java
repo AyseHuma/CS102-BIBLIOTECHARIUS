@@ -48,7 +48,7 @@ public class Movie extends Category{
         System.out.println(genresArr);
     }
 
-    public static void fillTconstsFromIMDB(double averageRating, int numVotes){
+    public static void fillTconstsFromIMDB(double averageRating, int numVotes, boolean movieOrSeries){
         tconsts = new ArrayList<>();
         try
         (
@@ -62,6 +62,7 @@ public class Movie extends Category{
                 "AND ratings.averageRating > ? " +
                 "AND basics.genres != '\\N' " +
                 "AND basics.titleType != 'tvEpisode' " +
+                "AND basics.titleType = ?" +
                 "AND principals.category IN ('director', 'writer') " +
                 "AND principals.nconst != '\\N'"
             );
@@ -70,6 +71,13 @@ public class Movie extends Category{
             statement.setQueryTimeout(30);  
             statement.setInt(1, numVotes);
             statement.setDouble(2, averageRating);
+
+            if(movieOrSeries){
+                statement.setString(3, "movie");
+            }
+            else{
+                statement.setString(3, "tvSeries");
+            }
     
             ResultSet rs = statement.executeQuery();
     

@@ -46,7 +46,7 @@ public class SignInPage {
         vbox.setAlignment(Pos.CENTER);
 
         StackPane root = new StackPane(vbox);
-        setBackground(root, "file:joe-taylor-collapse-render-2.jpg");
+        setBackground(root, getClass().getResource("/images/joe-taylor-collapse-render-2.jpg").toString());
 
         Scene scene = new Scene(root, 800, 600);
         stage.setScene(scene);

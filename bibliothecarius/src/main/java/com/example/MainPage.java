@@ -41,7 +41,7 @@ public class MainPage {
         StackPane root = new StackPane(vbox);
 
         // Background
-        Image backgroundImage = new Image("file:joe-taylor-collapse-render-1.jpg");
+        Image backgroundImage = new Image(getClass().getResource("/images/joe-taylor-collapse-render-1.jpg").toString());
         BackgroundImage background = new BackgroundImage(
             backgroundImage,
             BackgroundRepeat.NO_REPEAT,

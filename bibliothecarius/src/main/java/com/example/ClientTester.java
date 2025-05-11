@@ -84,7 +84,7 @@ public class ClientTester extends Application{
         // stage.setScene(s);
         // stage.show();
 
-        if (client.connect("192.168.48.174", 12345)) {
+        if (client.connect("...", 12345)) {
             System.out.println("Connected to the server!");
             showMainPage();
 

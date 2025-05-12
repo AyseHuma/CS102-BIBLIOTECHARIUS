@@ -29,6 +29,9 @@ public class GameSession {
         else if (category.equals("MOVIE")){
             loadQuestionMovie();
         }
+        else if (category.equals("GEOGRAPHY")){
+            loadQuestionsGeography();
+        }
         else{
             System.out.println("No such category");
         }  
@@ -59,6 +62,11 @@ public class GameSession {
         Book.fillBookIDFromGoodbooks(minRating, minVotes);
         fillQuestions("BOOK");
     }
+    private void loadQuestionsGeography() {
+        // You could later add filters based on subcat (like "European Flags", etc.)
+        fillQuestions("GEOGRAPHY");
+    }
+    
 
     private void loadQuestionMovie(){
         double minRating;
@@ -111,6 +119,12 @@ public class GameSession {
                 questions.add(makeRandomTypeQuestion(new Movie()));
             } 
         }
+        else if (category.equals("GEOGRAPHY")){
+            System.out.println("FILL QUESTION");
+            for(int i = 0; i<5; i++){
+                questions.add(makeRandomTypeQuestion(new Geography()));
+            } 
+        }
         else{
             System.out.println("No such category");
         }                      
@@ -137,7 +151,12 @@ public class GameSession {
                 break;
         }
         
-        random = r.nextInt(3);
+        if (c instanceof Geography){
+            random = r.nextInt(2);  // so that no population type questions are asked
+        }
+        else{
+            random = r.nextInt(3);
+        }
         
         // Second switch — determines d
         switch (random) {
@@ -151,7 +170,7 @@ public class GameSession {
                 d = new TypeDate(c, q);
                 break;
             default:
-                d = new TypeDate(c, q);
+                d = new TypeGenre(c, q);
                 break;
         }
 
@@ -169,12 +188,14 @@ public class GameSession {
 
     public void startGame() 
     {
+
         gameTimer = new GameTimer(60);
         gameTimer.startTimer();
         sendNextQuestion();
     }
 
     private void sendNextQuestion() {
+        System.out.println("SENT QUESTION");
         falseAnswered = 0; 
         if (currentQuestionIndex < questions.size()) 
         {

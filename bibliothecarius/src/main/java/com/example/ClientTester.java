@@ -1,5 +1,6 @@
 package com.example;
 
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -12,11 +13,14 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+
 
 public class ClientTester extends Application{
     public static ClientConnection client;
@@ -84,7 +88,7 @@ public class ClientTester extends Application{
         // stage.setScene(s);
         // stage.show();
 
-        if (client.connect("...", 12345)) {
+        if (client.connect("192.168.199.149", 12345)) {
             System.out.println("Connected to the server!");
             showMainPage();
 
@@ -193,7 +197,13 @@ public class ClientTester extends Application{
             choicesGrid.add(choiceButtons[i], (i%2), ((int)(i/(2.0))));
         }
 
-        vbox.getChildren().addAll(questionTextArea, choicesGrid);
+        ImageView flagView = tryLoadFlagFromQuestion(question);
+        if (flagView != null) {
+            vbox.getChildren().addAll(flagView, questionTextArea, choicesGrid);
+        } else {
+            vbox.getChildren().addAll(questionTextArea, choicesGrid);
+        }
+
 
         return vbox;
     }
@@ -232,7 +242,13 @@ public class ClientTester extends Application{
 
 
 
-        vbox.getChildren().addAll( questionTextArea, choiceButtons[0], choiceButtons[1]);
+        ImageView flagView = tryLoadFlagFromQuestion(question);
+        if (flagView != null) {
+            vbox.getChildren().addAll(flagView, questionTextArea, choiceButtons[0], choiceButtons[1]);
+        } else {
+            vbox.getChildren().addAll(questionTextArea, choiceButtons[0], choiceButtons[1]);
+        }
+
 
         return vbox;
     }
@@ -257,7 +273,13 @@ public class ClientTester extends Application{
             }
         });
     
-        vbox.getChildren().addAll(questionTextArea, answerInputArea);
+        ImageView flagView = tryLoadFlagFromQuestion(question);
+        if (flagView != null) {
+            vbox.getChildren().addAll(flagView, questionTextArea, answerInputArea);
+        } else {
+            vbox.getChildren().addAll(questionTextArea, answerInputArea);
+        }
+
 
         return vbox;
     }  
@@ -301,12 +323,6 @@ public class ClientTester extends Application{
     public void showLoadingPage(){
         new LoadingPage(this).show(primaryStage);
     }
-    public void showCreditsPage(){
-        new CatalogPage(this).show(primaryStage);
-    }
-    public void showTutorialPage(){
-        new CatalogPage(this).show(primaryStage);
-    }
 
     public void showMovieSubcategoryPage(){
         new MovieSubcategoryPage(this).show(primaryStage);
@@ -314,6 +330,17 @@ public class ClientTester extends Application{
 
     public void showBookSubcategoryPage(){
         new BookSubcategoryPage(this).show(primaryStage);
+    }
+    
+    public void showGeographySubcategoryPage() {
+        new GeographySubcategoryPage(this).show(primaryStage);
+    }
+
+    public void showCreditsPage(){
+        new CatalogPage(this).show(primaryStage);
+    }
+    public void showTutorialPage(){
+        new CatalogPage(this).show(primaryStage);
     }
 
     public void sendSignInRequest(String username, String password){
@@ -337,5 +364,43 @@ public class ClientTester extends Application{
         client.close();
         primaryStage.close();
         goesOn = false; 
+    }
+    private ImageView tryLoadFlagFromQuestion(String question) {
+        try {
+            // Extract country name from question string (basic heuristics)
+            String[] knownCountries = {
+                "Albania", "Argentina", "Australia", "Austria", "Bangladesh",
+                "Belgium", "Brazil", "Bulgaria", "Canada", "Chile",
+                "China", "Colombia", "Croatia", "Czechia", "Denmark",
+                "Egypt", "Estonia", "Finland", "France", "Germany",
+                "Ghana", "Greece", "Hungary", "India", "Indonesia",
+                "Iran", "Iraq", "Ireland", "Israel", "Italy",
+                "Japan", "Kenya", "Malaysia", "Mexico", "Morocco",
+                "Netherlands", "New Zealand", "Nigeria", "Norway", "Pakistan",
+                "Peru", "Philippines", "Poland", "Portugal", "Romania",
+                "Russia", "Saudi Arabia", "Serbia", "Singapore", "Slovakia",
+                "Slovenia", "South Africa", "South Korea", "Spain", "Sweden",
+                "Switzerland", "Thailand", "Turkey", "Ukraine", "United Arab Emirates",
+                "United Kingdom", "United States", "Vietnam"
+            };
+
+
+            for (String country : knownCountries) {
+                if (question.contains(country)) {
+                    String code = Geography.countryCodeMap.get(country);  // uses the static map
+                    System.out.println(code);
+                    if (code != null) {
+                        Image image = new Image(getClass().getResource("/flags/" + code + ".jpg").toExternalForm());
+                        ImageView imageView = new ImageView(image);
+                        imageView.setFitWidth(150);
+                        imageView.setPreserveRatio(true);
+                        return imageView;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Flag image not found or failed to load.");
+        }
+        return null;
     }
 }

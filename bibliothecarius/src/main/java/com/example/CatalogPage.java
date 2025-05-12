@@ -74,7 +74,7 @@ public class CatalogPage {
         });
 
         geographyButton.setOnAction(e -> {
-            // TODO woops
+            app.showGeographySubcategoryPage();
         });
 
         // booksLeaderboard.setOnAction(e -> app.showLeaderboardPage());
@@ -135,4 +135,3 @@ public class CatalogPage {
         pane.setBackground(new Background(background));
     }
 }
-

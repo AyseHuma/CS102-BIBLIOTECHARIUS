@@ -6,6 +6,7 @@ import java.util.Queue;
 public class MatchmakingManager {
     private final Queue<ClientHandler> waitingPlayersMovie = new LinkedList<>();
     private final Queue<ClientHandler> waitingPlayersBook = new LinkedList<>();
+    private final Queue<ClientHandler> waitingPlayersGEOGRAPHY = new LinkedList<>();
 
     public synchronized void queuePlayer(ClientHandler player, String category, String subcat) 
     {
@@ -29,6 +30,16 @@ public class MatchmakingManager {
                 startMatch(player, opponent, "BOOK", subcat);
             }
         }
+        else if (category.equals("GEOGRAPHY")){
+            if (waitingPlayersGEOGRAPHY.isEmpty()) {
+                waitingPlayersGEOGRAPHY.add(player);
+                player.sendMessage("WAITING_FOR_OPPONENT");
+            } 
+            else {
+                ClientHandler opponent = waitingPlayersGEOGRAPHY.poll();
+                startMatch(player, opponent, "GEOGRAPHY", subcat);
+            }
+        }
         else{
             System.out.println("NO SUCH CATEGORY");
         }
@@ -40,7 +51,6 @@ public class MatchmakingManager {
 
         p1.sendMessage("MATCH_FOUND:" + p2.getUsername() + ":" + category);  // prints opponent's name
         p2.sendMessage("MATCH_FOUND:" + p1.getUsername() + ":" + category);
-
         GameSession gameSession = new GameSession(p1, p2, category, subcat);
         p1.setGameSession(gameSession);
         p2.setGameSession(gameSession);

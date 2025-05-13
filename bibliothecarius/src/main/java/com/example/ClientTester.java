@@ -336,6 +336,10 @@ public class ClientTester extends Application{
         new GeographySubcategoryPage(this).show(primaryStage);
     }
 
+    public void showLeaderboardPage(){
+        new LeaderboardPage(this).show(primaryStage);
+    }
+    
     public void showCreditsPage(){
         new CatalogPage(this).show(primaryStage);
     }

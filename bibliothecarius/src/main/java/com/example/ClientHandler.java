@@ -82,6 +82,11 @@ public class ClientHandler implements Runnable{
                         gameSession.checkAnswer(this, answer, ID);
                     }
                 }
+                else if (inputLine.length() > "SEND_LEADERBOARD".length() && inputLine.substring(0,17).equals("SEND_LEADERBOARD:")){
+                    int colonInt = inputLine.indexOf(":");
+                    String leaderboardString = AccountDb.getLeaderboard(inputLine.substring(colonInt + 1)); 
+                    out.println("LEADERBOARD:" + leaderboardString);
+                }
                 else if(inputLine.equals("CANCEL_MATCH_REQUEST")){
                     matchmakingManager.removePlayer(this);
                 } 

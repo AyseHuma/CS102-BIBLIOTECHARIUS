@@ -1,6 +1,7 @@
 package com.example;
 
 import java.lang.reflect.Constructor;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.TimerTask;
@@ -13,6 +14,7 @@ public class GameSession {
     private GameTimer gameTimer; 
     private int falseAnswered; 
     private String subcat; 
+    private String c; 
 
     private ArrayList<Question> questions = new ArrayList<Question>();
 
@@ -22,6 +24,7 @@ public class GameSession {
         this.player2 = player2;
         player1.gamePoint = 0; 
         player2.gamePoint = 0; 
+        c = category; 
         this.subcat = subcat; 
         if (category.equals("BOOK")){
             loadQuestionsBook();
@@ -241,6 +244,15 @@ public class GameSession {
         player2.setGameSession(null);
         player1.sendMessage("GAME_OVER:" + player1.gamePoint + ":" + player2.gamePoint);
         player2.sendMessage("GAME_OVER:" + player2.gamePoint + ":" + player1.gamePoint);
+
+        try {
+            AccountDb.updateScore(player1.getUsername(), c, player1.gamePoint);
+            AccountDb.updateScore(player2.getUsername(), c, player2.gamePoint);
+            AccountDb.updateLeaderboard(c);
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         gameTimer.stopTimer();
         // Optionally: Send final scores to the leaderboard
     }

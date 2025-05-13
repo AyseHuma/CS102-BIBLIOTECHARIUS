@@ -35,6 +35,7 @@ public class CreditsPage {
                 - JavaFX (https://openjfx.io)\n
                 - Java 17+\n
                 - IDE: IntelliJ IDEA\n
+                - DB Browser for SQLite\n
 
                 IMAGES:
                 - Taylor, Joe.“Collapse”. The Rookies, 31 May 2020, https://www.therookies.co/entries/5625\n

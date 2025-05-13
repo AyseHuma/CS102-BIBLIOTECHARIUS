@@ -96,20 +96,47 @@ public class AccountDb {
         }
     }
 
-    public static void updateScore(int userId, String category, int newPoints) throws SQLException {
+    public static int getUserIDFromName(String name){
+        String string = "SELECT ID FROM UserAccounts WHERE NAME = ?";
+        
+        try (Connection conn = connect();
+            PreparedStatement checkStmt = conn.prepareStatement(string)) {
+
+            checkStmt.setString(1, name);
+            ResultSet rs = checkStmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("ID");
+            } else {
+                return -1; 
+            }
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public static void updateScore(String name, String category, int additionalPoints) throws SQLException {
+        int userId = getUserIDFromName(name);
+        System.out.println(userId);
         String checkSql = "SELECT points FROM scores WHERE user_id = ? AND category = ?;";
         String updateSql = "UPDATE scores SET points = ? WHERE user_id = ? AND category = ?;";
         String insertSql = "INSERT INTO scores(user_id, category, points) VALUES (?, ?, ?);";
 
         try (Connection conn = connect();
-             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+            PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+
             checkStmt.setInt(1, userId);
             checkStmt.setString(2, category);
             ResultSet rs = checkStmt.executeQuery();
 
             if (rs.next()) {
+                int currentPoints = rs.getInt("points");
+                int updatedPoints = currentPoints + additionalPoints;
+
                 try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
-                    updateStmt.setInt(1, newPoints);
+                    updateStmt.setInt(1, updatedPoints);
                     updateStmt.setInt(2, userId);
                     updateStmt.setString(3, category);
                     updateStmt.executeUpdate();
@@ -118,14 +145,15 @@ public class AccountDb {
                 try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
                     insertStmt.setInt(1, userId);
                     insertStmt.setString(2, category);
-                    insertStmt.setInt(3, newPoints);
+                    insertStmt.setInt(3, additionalPoints); // First time adding points
                     insertStmt.executeUpdate();
                 }
             }
         }
     }
 
-    public static void updateLeaderboard(String category) throws SQLException {
+
+    public static synchronized void updateLeaderboard(String category) throws SQLException {
         String selectSql = "SELECT user_id, points FROM scores WHERE category = ? ORDER BY points DESC;";
         String deleteSql = "DELETE FROM leaderboard WHERE category = ?;";
         String insertSql = "INSERT INTO leaderboard(user_id, category, rank) VALUES (?, ?, ?);";
@@ -213,7 +241,7 @@ public class AccountDb {
                 String name = rs.getString("NAME");
                 int rank = rs.getInt("rank");
                 int points = rs.getInt("points");
-                result += rank + ". " + name + " - " + points + " points\n";
+                result += rank + ". " + name + " - " + points + " points *";
             }
         }
         return result;

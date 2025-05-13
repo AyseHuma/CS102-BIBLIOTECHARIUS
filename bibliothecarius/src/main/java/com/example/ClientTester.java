@@ -5,6 +5,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import javax.print.attribute.standard.Media;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -13,6 +15,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
@@ -29,6 +34,7 @@ public class ClientTester extends Application{
     private String lastOpponentUsername; 
     private String lastPlayedCategory;
     private String lastChosenSubcategory; 
+    private MediaPlayer mediaPlayer; 
     
     private volatile boolean goesOn = true; // volatile so that a change in this is quickly seen by other threads and they also stop 
     public static void main(String[] args) {
@@ -71,6 +77,10 @@ public class ClientTester extends Application{
     public void start(Stage stage) throws Exception {
         client = new ClientConnection();
 
+        Media songMedia = new Media(getClass().getResource("/sound/ost1.mp3").toString());
+        mediaPlayer = new MediaPlayer(songMedia);
+        mediaPlayer.setAutoPlay(true);
+
         this.primaryStage = stage; 
         
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
@@ -88,7 +98,7 @@ public class ClientTester extends Application{
         // stage.setScene(s);
         // stage.show();
 
-        if (client.connect("192.168.199.149", 12345)) {
+        if (client.connect("172.20.10.2", 12345)) {
             System.out.println("Connected to the server!");
             showMainPage();
 
@@ -139,6 +149,13 @@ public class ClientTester extends Application{
                                 } else {
                                     System.out.println("Failed to parse question.");
                                 }
+                            });
+                        }
+                        else if (msg.length() > "LEADERBOARD".length() && msg.startsWith("LEADERBOARD:")){
+                            int colonInt = msg.indexOf(":");
+                            final String m = msg; 
+                            Platform.runLater(() -> {  
+                                showLeaderboardPage(m.substring(colonInt + 1));
                             });
                         }
                         else if (msg.length() > "GAME_OVER".length() && msg.substring(0,10).equals("GAME_OVER:")){
@@ -284,6 +301,14 @@ public class ClientTester extends Application{
         return vbox;
     }  
 
+    public void setMediaPlayerVolume(double value){
+        mediaPlayer.setVolume(value/100);
+    }
+
+    public int getMediaPlayerVolume(){
+        return (int)(mediaPlayer.getVolume() * 100);
+    }
+
     public void setLastChosenSubcategory(String subcat){
         lastChosenSubcategory = subcat; 
     }
@@ -316,6 +341,10 @@ public class ClientTester extends Application{
         new CatalogPage(this).show(primaryStage);
     }
 
+    public void showLeaderboardPage(String leaderString){
+        new LeaderboardPage(this, leaderString).show(primaryStage);
+    }
+
     public void showComponentChoicePage(String category, String subcat){
         new ComponentChoicePage(this, category, subcat).show(primaryStage);
     }
@@ -336,16 +365,16 @@ public class ClientTester extends Application{
         new GeographySubcategoryPage(this).show(primaryStage);
     }
 
-    public void showLeaderboardPage(){
-        new LeaderboardPage(this).show(primaryStage);
-    }
-    
     public void showCreditsPage(){
         new CatalogPage(this).show(primaryStage);
     }
     public void showTutorialPage(){
         new CatalogPage(this).show(primaryStage);
     }
+    public void showSettingsPage(){
+        new SettingsPage(this).show(primaryStage);
+    }
+    
 
     public void sendSignInRequest(String username, String password){
         client.sendMessage("SIGN_IN_REQUEST:" + username + ":" + password);
@@ -361,6 +390,10 @@ public class ClientTester extends Application{
 
     public void sendCancelMatchmakingRequest(){
         client.sendMessage("CANCEL_MATCH_REQUEST");
+    }
+
+    public void sendLeaderboardRequest(String category){
+        client.sendMessage("SEND_LEADERBOARD:" + category);
     }
 
     public void sendDisconnectRequest(){

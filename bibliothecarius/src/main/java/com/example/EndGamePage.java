@@ -49,7 +49,7 @@ public class EndGamePage {
         styleButton(leaderboardButton);
 
         newGameButton.setOnAction(e -> app.showGameStartPage());
-        leaderboardButton.setOnAction(e -> app.showMainPage());
+        leaderboardButton.setOnAction(e -> app.sendLeaderboardRequest(category));
 
         HBox playerInfoBox = new HBox(50, player1Text, player2Text);
         playerInfoBox.setAlignment(Pos.CENTER);

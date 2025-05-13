@@ -13,12 +13,20 @@ public class TypeDate extends Type{
                 question = "What is the release date of the movie "+ c.getTitle() + "?";
             }
         }
-        else{
+        else if (c instanceof Book){
             if(b instanceof YesNo){
                 question = "Is the publication date of the book " + c.getTitle() + " " + wrongOrRightAnswer(c)+ "?"; 
             }
             else{
                 question = "When was the publication date of the book " + c.getTitle() + "?";
+            }
+        }
+        else{
+            if(b instanceof YesNo){
+                question = "Is the population of the country " + c.getTitle() + " " + wrongOrRightAnswer(c)+ "?"; 
+            }
+            else{
+                question = "What is the population of " + c.getTitle() + "?";
             }
         }
         acceptableAnswers.add("" + c.getReleaseDate());

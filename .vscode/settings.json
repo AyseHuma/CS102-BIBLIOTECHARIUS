@@ -1,9 +1,0 @@
-{
-    "java.project.sourcePaths": [
-        "Cs-102 Project",
-        "src"
-    ],
-    "java.project.referencedLibraries": [
-        "sqlite-jdbc-3.49.1.0.jar"
-    ]
-}

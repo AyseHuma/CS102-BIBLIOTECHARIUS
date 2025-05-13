@@ -77,9 +77,9 @@ public class CatalogPage {
             app.showGeographySubcategoryPage();
         });
 
-        booksLeaderboard.setOnAction(e -> app.sendLeaderboardRequest("BOOK"));
-        moviesLeaderboard.setOnAction(e -> app.sendLeaderboardRequest("MOVIE"));
-        geographyLeaderboard.setOnAction(e -> app.sendLeaderboardRequest("GEOGRAPHY"));
+        // booksLeaderboard.setOnAction(e -> app.showLeaderboardPage());
+        // moviesLeaderboard.setOnAction(e -> app.showLeaderboardPage());
+        // geographyLeaderboard.setOnAction(e -> app.showLeaderboardPage());
         backButton.setOnAction(e -> app.showGameStartPage());
 
         VBox booksBox = new VBox(10, booksLabel, booksView, booksButton, booksLeaderboard);

@@ -322,26 +322,27 @@ public class AccountDb {
         }
     }
 
-    public static boolean acceptFriendRequest(int receiverId, int senderId) throws SQLException {
-    String updateSql = "UPDATE friends SET status = 'accepted' WHERE user_id = ? AND friend_id = ?";
-    String insertSql = "INSERT INTO friends (user_id, friend_id, status) VALUES (?, ?, 'accepted')";
-    try (Connection conn = connect();
-        PreparedStatement updateStmt = conn.prepareStatement(updateSql);
-        PreparedStatement insertStmt = conn.prepareStatement(insertSql))
-        {
-            updateStmt.setInt(1, senderId);
-            updateStmt.setInt(2, receiverId);
-            int rowsUpdated = updateStmt.executeUpdate();
-            if (rowsUpdated > 0)
+    public static boolean acceptFriendRequest(String name1, int senderId) throws SQLException {
+        int receiverId = getUserIdByName(name1) ;
+        String updateSql = "UPDATE friends SET status = 'accepted' WHERE user_id = ? AND friend_id = ?";
+        String insertSql = "INSERT INTO friends (user_id, friend_id, status) VALUES (?, ?, 'accepted')";
+        try (Connection conn = connect();
+            PreparedStatement updateStmt = conn.prepareStatement(updateSql);
+            PreparedStatement insertStmt = conn.prepareStatement(insertSql))
             {
-                insertStmt.setInt(1, receiverId);
-                insertStmt.setInt(2, senderId);
-                insertStmt.executeUpdate();
-                return true;
+                updateStmt.setInt(1, senderId);
+                updateStmt.setInt(2, receiverId);
+                int rowsUpdated = updateStmt.executeUpdate();
+                if (rowsUpdated > 0)
+                {
+                    insertStmt.setInt(1, receiverId);
+                    insertStmt.setInt(2, senderId);
+                    insertStmt.executeUpdate();
+                    return true;
+                }
+                return false;
             }
-            return false;
-        }
-
+        
     }
 
     public static boolean rejectFriendRequest(int userId, int requesterId) throws SQLException {
@@ -357,25 +358,36 @@ public class AccountDb {
     }
 
 
-    public static List<String> getPendingRequests(int userId) throws SQLException {
+    public static String getPendingRequests(String name1) throws SQLException {
+        int userId = getUserIdByName(name1) ;
         String query = """
             SELECT UA.ID, UA.NAME
             FROM friends F
             JOIN UserAccounts UA ON F.user_id = UA.ID
             WHERE F.friend_id = ? AND F.status = 'pending'
             """;
-        List<String> list = new ArrayList<>();
+
+        StringBuilder result = new StringBuilder();
         try (Connection conn = connect();
             PreparedStatement ps = conn.prepareStatement(query)) {
+
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
-            while (rs.next())
-            {
-                list.add(rs.getString("NAME"));
+            while (rs.next()) {
+                int id = rs.getInt("ID");
+                String name = rs.getString("NAME");
+                result.append(id).append(":").append(name).append("*");
             }
         }
-        return list;
-    }
+
+        // Remove trailing '*' if present
+        if (result.length() > 0) {
+            result.setLength(result.length() - 1);
+        }
+
+        return result.toString();  // Example output: "7:Alice*12:Bob*20:Charlie"
+}
+
 
     public static List<String> getFriendList(int userId) throws SQLException {
         Set<String> friendSet = new HashSet<>();
@@ -407,6 +419,26 @@ public class AccountDb {
 
 
     public static boolean areFriends(int userId1, int userId2) throws SQLException {
+        String query = """
+            SELECT 1 FROM friends 
+            WHERE (
+                (user_id = ? AND friend_id = ?) OR
+                (user_id = ? AND friend_id = ?)
+            ) AND status = 'accepted'
+            """;
+        try (Connection conn = connect();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, userId1);
+            ps.setInt(2, userId2);
+            ps.setInt(3, userId2);
+            ps.setInt(4, userId1);
+            return ps.executeQuery().next();
+        }
+    }
+
+    public static boolean areFriends(String n1, String n2) throws SQLException {
+        int userId1 = getUserIdByName(n1);
+        int userId2 = getUserIdByName(n2);
         String query = """
             SELECT 1 FROM friends 
             WHERE (

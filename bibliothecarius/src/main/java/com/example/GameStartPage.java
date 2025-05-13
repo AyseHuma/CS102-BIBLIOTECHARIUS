@@ -27,21 +27,23 @@ public class GameStartPage {
         title.setStyle("-fx-effect: dropshadow(gaussian, black, 10, 0, 0, 2);");
 
         Button startButton = new Button("Start Game");
-        Button friendsButton = new Button("Add Friends");
+        
         Button tutorialButton = new Button("Tutorial");
+        Button friendsButton = new Button("Friend request");
         Button settingsButton = new Button("Settings");
         Button creditsButton = new Button("Credits");
         Button closeButton = new Button("Close");
 
-        style(startButton, friendsButton, tutorialButton, settingsButton, creditsButton, closeButton);
+        style(startButton, tutorialButton, settingsButton, creditsButton, closeButton, friendsButton);
 
         startButton.setOnAction(e -> app.showCatalogPage());
-        friendsButton.setOnAction(e -> app.showMainPage()); // TODO ADD THIS AND THE ABOVE PROPER LINKS
+        friendsButton.setOnAction(e -> app.showFriendRequestPage());
+       
         tutorialButton.setOnAction(e -> app.showMainPage());
 
         closeButton.setOnAction(e -> app.sendDisconnectRequest());
 
-        VBox vbox = new VBox(20, title, startButton, friendsButton, tutorialButton, settingsButton, creditsButton, closeButton);
+        VBox vbox = new VBox(20, title, startButton,friendsButton, tutorialButton, settingsButton, creditsButton, closeButton);
         vbox.setAlignment(Pos.CENTER);
 
         StackPane root = new StackPane(vbox);

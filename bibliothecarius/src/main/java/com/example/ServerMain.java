@@ -28,4 +28,12 @@ public class ServerMain {
             e.printStackTrace();
         }
     }
+    public static ClientHandler getClientByUsername(String username) {
+        for (ClientHandler client : connectedClients) {
+            if (client.getUsername().equals(username)) {
+                return client;
+            }
+        }
+        return null; // If no client is found
+    }
 }

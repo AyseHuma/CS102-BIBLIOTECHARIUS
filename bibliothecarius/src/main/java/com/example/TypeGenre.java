@@ -12,20 +12,12 @@ public class TypeGenre extends Type{
                 question = "What is the genre of the movie "+ c.getTitle() + "?";
             }
         }
-        else if (c instanceof Book){
+        else{
             if(b instanceof YesNo){
                 question = "Is the genre of the book " + c.getTitle() + " " + wrongOrRightAnswer(c) + "?"; 
             }
             else{
                 question = "What is the book " + c.getTitle() + "?";
-            }
-        }
-        else{
-            if(b instanceof YesNo){
-                question = "Is the language of the country " + c.getTitle() + " " + wrongOrRightAnswer(c) + "?"; 
-            }
-            else{
-                question = "What is language of the country " + c.getTitle() + "?";
             }
         }
         acceptableAnswers = (ArrayList<String>)(c.getGenresArr().clone()); 

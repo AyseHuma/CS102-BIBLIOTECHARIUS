@@ -12,20 +12,12 @@ public class TypeName extends Type{
                 question = "Who is a creator in the movie/show "+ c.getTitle() + "?";
             }
         }
-        else if (c instanceof Book){
+        else{
             if(b instanceof YesNo){
                 question = "Does this person have a hand in the book " + c.getTitle() + ": " + wrongOrRightAnswer(c) + "?"; 
             }
             else{
                 question = "Who is the author of the book " + c.getTitle() + "?";
-            }
-        }
-        else{
-            if(b instanceof YesNo){
-                question = "Is the name of this country this: " + wrongOrRightAnswer(c) + "?"; 
-            }
-            else{
-                question = "What is the name of this country?";
             }
         }
         acceptableAnswers = (ArrayList<String>)(c.getCreators().clone()); 

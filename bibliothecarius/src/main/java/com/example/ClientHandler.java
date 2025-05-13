@@ -48,13 +48,19 @@ public class ClientHandler implements Runnable{
                     String category = inputLine.substring(14, lastColon);
                     matchmakingManager.queuePlayer(this, category, subcat);  // TODO separate methods would work better
                 }
+                else if (inputLine.length() > "FRIEND_MATCH_REQUEST".length() && inputLine.startsWith("FRIEND_MATCH_REQUEST:")) 
+                {
+                    int lastColon = inputLine.lastIndexOf(":");
+                    String subcat = inputLine.substring(lastColon + 1);
+                    String category = inputLine.substring(14, lastColon);
+                    matchmakingManager.queueFriend(this, category, subcat);  // TODO separate methods would work better
+                }                
                 else if(inputLine.length() > "SIGN_IN_REQUEST".length() && inputLine.substring(0,16).equals("SIGN_IN_REQUEST:")){
                     String[] list = inputLine.split(":");
                     String name = list[1];
                     String pass = list[2];
                     if(AccountDb.authenticateUser(name, pass))
                     {
-                        int userID = AccountDb.getUserIdByName(name);
                         username = name; 
                         out.println("SIGNED_IN:" + username);
                     }
@@ -82,18 +88,23 @@ public class ClientHandler implements Runnable{
                         gameSession.checkAnswer(this, answer, ID);
                     }
                 }
-                else if (inputLine.length() > "SEND_LEADERBOARD".length() && inputLine.substring(0,17).equals("SEND_LEADERBOARD:")){
-                    int colonInt = inputLine.indexOf(":");
-                    String leaderboardString = AccountDb.getLeaderboard(inputLine.substring(colonInt + 1)); 
-                    out.println("LEADERBOARD:" + leaderboardString);
-                }
                 else if(inputLine.equals("CANCEL_MATCH_REQUEST")){
                     matchmakingManager.removePlayer(this);
                 } 
                 else if(inputLine.equals("DISCONNECT")){
                     goOn = false; 
                     disconnect(); 
-                }             
+                } 
+                else if(inputLine.length() > ("ADD_FRIEND_REQUEST").length() && inputLine.startsWith("ADD_FRIEND_REQUEST:")) 
+                {
+                    String[] parts = inputLine.split(":");
+                    myUsername = parts[1];
+                    String opponentUsername = parts[2];
+                    out.println("up" + myUsername + " " + opponentUsername + " " + AccountDb.getUserIdByName(myUsername));
+
+                    AccountDb.sendFriendRequest(AccountDb.getUserIdByName(myUsername), opponentUsername);
+                    out.println(myUsername + " " + opponentUsername + " " + AccountDb.getUserIdByName(myUsername));
+                }            
                 else
                 {
                     out.println("Server: " + inputLine);
@@ -157,4 +168,15 @@ public class ClientHandler implements Runnable{
     public void morePoints() {  //TODO add points to whoever answered first
         gamePoint++;
     }
+    public ClientHandler getClientByUsername(String username) {
+        for (ClientHandler client : ServerMain.connectedClients) {
+            if (client.getUsername().equals(username)) {
+                return client;
+            }
+        }
+        return null;
+        
+    }
+    // Accept invitation from a friend
+   
 }   

@@ -94,7 +94,6 @@ public class QuestionPage {
                     timeLeft --;
                     Platform.runLater(() -> {  
                         timerLabel.setText("Time: " + timeLeft + "s");
-                        System.out.println("went");
                     });
                     if (timeLeft <= 0) {
                         stopTimer();

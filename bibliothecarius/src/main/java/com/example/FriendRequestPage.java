@@ -6,7 +6,11 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
@@ -14,36 +18,55 @@ public class FriendRequestPage {
 
     private final ClientTester app;
     private final String currentPlayer;
+    private String s; 
 
-    public FriendRequestPage(ClientTester app) {
+    public FriendRequestPage(ClientTester app, String s) {
         this.app = app;
         this.currentPlayer = app.myUsername; // Make sure this exists
+        this.s = s;
     }
 
     public void show(Stage stage) {
+
+        // Text title = new Text("Requests");
+        // title.setFont(Font.font("Georgia", 50));
+        // title.setFill(Color.GOLD);
+
+        // Button returnButton = new Button("Return");
+        // returnButton.setOnAction(e -> app.showGameStartPage());
+        // style(returnButton);
+        
+        // // String s = leaderboardString.replace("*", "\n");
+        // TextArea leaderboardLabel = new TextArea(s);
+        // leaderboardLabel.setEditable(false);
+
+        // VBox vbox = new VBox(20, title, leaderboardLabel, returnButton);
+        // vbox.setAlignment(Pos.CENTER);
+        // StackPane root = new StackPane(vbox);
+        // setBackground(root, getClass().getResource("/images/2025-04-07_23-11-34.jpg").toString());
+        // stage.setScene(new Scene(root, 800, 600));
+
         VBox vbox = new VBox(15);
         vbox.setAlignment(Pos.CENTER);
 
-        String requestString = "";
-        try {
-            requestString = AccountDb.getPendingRequests(currentPlayer);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
 
-        if (requestString == null || requestString.isEmpty()) {
-            Label none = new Label("No pending friend requests.");
-            vbox.getChildren().add(none);
+
+        if (s == null || s.isEmpty()) {
+            Text title = new Text("No pending friend requests.");
+            title.setFont(Font.font("Georgia", 30));
+            title.setFill(Color.GOLD);
+
+            vbox.getChildren().add(title);
         } else {
             int start = 0;
-            while (start < requestString.length()) {
-                int starIndex = requestString.indexOf("*", start);
+            while (start < s.length()) {
+                int starIndex = s.indexOf("*", start);
                 String entry;
                 if (starIndex == -1) {
-                    entry = requestString.substring(start);
-                    start = requestString.length();
+                    entry = s.substring(start);
+                    start = s.length();
                 } else {
-                    entry = requestString.substring(start, starIndex);
+                    entry = s.substring(start, starIndex);
                     start = starIndex + 1;
                 }
 
@@ -59,12 +82,10 @@ public class FriendRequestPage {
                     style(acceptButton, label);
 
                     acceptButton.setOnAction(e -> {
-                        try {
-                            AccountDb.acceptFriendRequest(currentPlayer, senderId);
-                            app.showFriendRequestPage(); // Refresh the page
-                        } catch (SQLException ex) {
-                            ex.printStackTrace();
-                        }
+                        
+                            app.sendAcceptFriendRequest(currentPlayer, senderId);
+                            app.sendGetFriendRequests();; // Refresh the page
+
                     });
 
                     HBox hbox = new HBox(10, label, acceptButton);

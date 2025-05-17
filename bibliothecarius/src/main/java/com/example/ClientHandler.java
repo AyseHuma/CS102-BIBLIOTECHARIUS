@@ -52,16 +52,21 @@ public class ClientHandler implements Runnable{
                 {
                     int lastColon = inputLine.lastIndexOf(":");
                     String subcat = inputLine.substring(lastColon + 1);
-                    String category = inputLine.substring(14, lastColon);
+                    String category = inputLine.substring("FRIEND_MATCH_REQUEST:".length(), lastColon);
                     matchmakingManager.queueFriend(this, category, subcat);  // TODO separate methods would work better
-                }                
+                }
+                else if(inputLine.equals("USER_INFO_REQUEST")){
+                    out.println("USER_INFO:" + AccountDb.displayUserInfo(myUsername));
+                }
                 else if(inputLine.length() > "SIGN_IN_REQUEST".length() && inputLine.substring(0,16).equals("SIGN_IN_REQUEST:")){
                     String[] list = inputLine.split(":");
                     String name = list[1];
                     String pass = list[2];
                     if(AccountDb.authenticateUser(name, pass))
                     {
+                        int userID = AccountDb.getUserIdByName(name);
                         username = name; 
+                        myUsername = name;
                         out.println("SIGNED_IN:" + username);
                     }
                     else{
@@ -74,6 +79,7 @@ public class ClientHandler implements Runnable{
                     String pass = list[2];
                     if(AccountDb.addUser(name,pass,null)){
                         username = name; 
+                        myUsername = username;
                         out.println("SIGNED_UP:" + username);
                     }
                     else{
@@ -88,9 +94,21 @@ public class ClientHandler implements Runnable{
                         gameSession.checkAnswer(this, answer, ID);
                     }
                 }
+                else if (inputLine.length() > "SEND_LEADERBOARD".length() && inputLine.substring(0,17).equals("SEND_LEADERBOARD:")){
+                    int colonInt = inputLine.indexOf(":");
+                    String leaderboardString = AccountDb.getLeaderboard(inputLine.substring(colonInt + 1)); 
+                    out.println("LEADERBOARD:" + leaderboardString);
+                }
                 else if(inputLine.equals("CANCEL_MATCH_REQUEST")){
                     matchmakingManager.removePlayer(this);
                 } 
+                else if(inputLine.equals("GET_FRIEND_REQUESTS")){
+                    out.println("PENDING:" + AccountDb.getPendingRequests(myUsername));  
+                }
+                else if (inputLine.startsWith("ADD_FRIEND:")){
+                    int senderId = Integer.parseInt(inputLine.substring(inputLine.indexOf(":") + 1));
+                    AccountDb.acceptFriendRequest(myUsername, senderId);
+                }
                 else if(inputLine.equals("DISCONNECT")){
                     goOn = false; 
                     disconnect(); 
@@ -104,7 +122,7 @@ public class ClientHandler implements Runnable{
 
                     AccountDb.sendFriendRequest(AccountDb.getUserIdByName(myUsername), opponentUsername);
                     out.println(myUsername + " " + opponentUsername + " " + AccountDb.getUserIdByName(myUsername));
-                }            
+                }             
                 else
                 {
                     out.println("Server: " + inputLine);
@@ -175,8 +193,5 @@ public class ClientHandler implements Runnable{
             }
         }
         return null;
-        
     }
-    // Accept invitation from a friend
-   
 }   

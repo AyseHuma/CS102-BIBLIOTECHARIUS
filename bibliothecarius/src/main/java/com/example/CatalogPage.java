@@ -42,7 +42,7 @@ public class CatalogPage {
 
         ImageView booksView = new ImageView(new Image(getClass().getResource("/images/books.jpg").toExternalForm()));
         ImageView moviesView = new ImageView(new Image(getClass().getResource("/images/movies.jpg").toExternalForm()));
-        ImageView geographyView = new ImageView(new Image(getClass().getResource("/images/movies.jpg").toExternalForm()));
+        ImageView geographyView = new ImageView(new Image(getClass().getResource("/images/geo.png").toExternalForm()));
 
         setImageSize(booksView);
         setImageSize(moviesView);
@@ -77,9 +77,9 @@ public class CatalogPage {
             app.showGeographySubcategoryPage();
         });
 
-        // booksLeaderboard.setOnAction(e -> app.showLeaderboardPage());
-        // moviesLeaderboard.setOnAction(e -> app.showLeaderboardPage());
-        // geographyLeaderboard.setOnAction(e -> app.showLeaderboardPage());
+        booksLeaderboard.setOnAction(e -> app.sendLeaderboardRequest("BOOK"));
+        moviesLeaderboard.setOnAction(e -> app.sendLeaderboardRequest("MOVIE"));
+        geographyLeaderboard.setOnAction(e -> app.sendLeaderboardRequest("GEOGRAPHY"));
         backButton.setOnAction(e -> app.showGameStartPage());
 
         VBox booksBox = new VBox(10, booksLabel, booksView, booksButton, booksLeaderboard);

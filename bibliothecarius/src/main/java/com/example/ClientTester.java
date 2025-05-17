@@ -5,6 +5,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+//import javax.print.attribute.standard.Media;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -13,6 +15,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+// import javafx.scene.media.Media;
+// import javafx.scene.media.MediaPlayer;
+// import javafx.scene.media.MediaView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
@@ -29,6 +34,7 @@ public class ClientTester extends Application{
     private String lastOpponentUsername; 
     private String lastPlayedCategory;
     private String lastChosenSubcategory; 
+    //private MediaPlayer mediaPlayer; 
     
     private volatile boolean goesOn = true; // volatile so that a change in this is quickly seen by other threads and they also stop 
     public static void main(String[] args) {
@@ -71,6 +77,10 @@ public class ClientTester extends Application{
     public void start(Stage stage) throws Exception {
         client = new ClientConnection();
 
+        // Media songMedia = new Media(getClass().getResource("/sound/ost1.mp3").toString());
+        // mediaPlayer = new MediaPlayer(songMedia);
+        // mediaPlayer.setAutoPlay(true);
+
         this.primaryStage = stage; 
         
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
@@ -84,11 +94,10 @@ public class ClientTester extends Application{
         });
 
         // Scene s = new Scene(new VBox(), 500, 500);
-        // stage.setTitle("BIBLIOTHECARIUS");    //TODO on close, make sure the connection is discharged and if this happens during a match opponent wins
         // stage.setScene(s);
         // stage.show();
 
-        if (client.connect("139.179.224.113", 12345)) {
+        if (client.connect("172.20.10.2", 12345)) {
             System.out.println("Connected to the server!");
             showMainPage();
 
@@ -115,10 +124,22 @@ public class ClientTester extends Application{
                                 showGameStartPage();
                             });
                         }
+                        else if (msg.startsWith("PENDING")){
+                            final String s = msg.substring(8);
+                            Platform.runLater(() -> {  
+                                showFriendRequestPage(s);
+                            });
+                        }
                         else if (msg.length() > "MATCH_FOUND".length() && msg.substring(0,12).equals("MATCH_FOUND:")) {
                             String[] lastOpponentAndCategory = msg.substring(12).split(":");
                             lastOpponentUsername = lastOpponentAndCategory[0];
                             lastPlayedCategory = lastOpponentAndCategory[1];
+                        }
+                        else if (msg.startsWith("USER_INFO:")){
+                            final String s = msg; 
+                            Platform.runLater(() -> {  
+                                showUserInfoPage(s.substring(s.indexOf(":") + 1));
+                            });
                         }
                         else if (msg.length() > "QUESTION".length() && msg.substring(0,9).equals("QUESTION:")) {
                             int lastColon = msg.lastIndexOf(":");
@@ -141,16 +162,11 @@ public class ClientTester extends Application{
                                 }
                             });
                         }
-                        else if (msg.startsWith("INVITE_ACCEPTED:")) {
-                            String opponent = msg.substring(15);
-                            Platform.runLater(() -> {
-                                showGameStartPage(); // Start the game if the invitation is accepted
-                            });
-                        }
-                        else if (msg.startsWith("INVITE_REJECTED:")) {
-                            String opponent = msg.substring(17);
-                            Platform.runLater(() -> {
-                                showMainPage(); // Return to the main page if the invitation is rejected
+                        else if (msg.length() > "LEADERBOARD".length() && msg.startsWith("LEADERBOARD:")){
+                            int colonInt = msg.indexOf(":");
+                            final String m = msg; 
+                            Platform.runLater(() -> {  
+                                showLeaderboardPage(m.substring(colonInt + 1));
                             });
                         }
                         else if (msg.length() > "GAME_OVER".length() && msg.substring(0,10).equals("GAME_OVER:")){
@@ -190,6 +206,7 @@ public class ClientTester extends Application{
         for (int i = 0; i < 4; i++) {
             final String choiceText = choices.get(i);  // final because class will use it
             choiceButtons[i] = new Button((char)('A' + i) + ". " + choiceText);
+            style(choiceButtons[i]);
         }
         
         for (int i = 0; i < 4; i++){
@@ -235,6 +252,7 @@ public class ClientTester extends Application{
 
         choiceButtons[0] = new Button("Yes");
         choiceButtons[1] = new Button("No");
+        style(choiceButtons);
         choiceButtons[0].setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
@@ -275,7 +293,9 @@ public class ClientTester extends Application{
         questionTextArea.setBackground(Background.EMPTY);
         questionTextArea.setStyle("-fx-font-family: 'Times New Roman'; -fx-font-size: 18px; -fx-text-fill: white; -fx-control-inner-background: black;");
 
-        TextField answerInputArea = new TextField("Answer Here");
+        TextField answerInputArea = new TextField();
+        answerInputArea.setPromptText("Answer Here!");
+
         answerInputArea.setPrefHeight(100);
         answerInputArea.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -295,6 +315,14 @@ public class ClientTester extends Application{
 
         return vbox;
     }  
+
+    // public void setMediaPlayerVolume(double value){
+    //     mediaPlayer.setVolume(value/100);
+    // }
+
+    // public int getMediaPlayerVolume(){
+    //     return (int)(mediaPlayer.getVolume() * 100);
+    // }
 
     public void setLastChosenSubcategory(String subcat){
         lastChosenSubcategory = subcat; 
@@ -328,6 +356,10 @@ public class ClientTester extends Application{
         new CatalogPage(this).show(primaryStage);
     }
 
+    public void showLeaderboardPage(String leaderString){
+        new LeaderboardPage(this, leaderString).show(primaryStage);
+    }
+
     public void showComponentChoicePage(String category, String subcat){
         new ComponentChoicePage(this, category, subcat).show(primaryStage);
     }
@@ -349,15 +381,19 @@ public class ClientTester extends Application{
     }
 
     public void showCreditsPage(){
-        new CatalogPage(this).show(primaryStage);
+        new CreditsPage(this).show(primaryStage);
+    }
+    public void showFriendRequestPage(String s) {
+        new FriendRequestPage(this, s).show(primaryStage);
     }
     public void showTutorialPage(){
-        new CatalogPage(this).show(primaryStage);
+        new TutorialPage(this).show(primaryStage);
     }
+    // public void showSettingsPage(){
+    //     new SettingsPage(this).show(primaryStage);
+    // }
+    
 
-    public void showFriendRequestPage(){
-        new FriendRequestPage(this).show(primaryStage);
-    }
     public void sendSignInRequest(String username, String password){
         client.sendMessage("SIGN_IN_REQUEST:" + username + ":" + password);
     }
@@ -369,22 +405,20 @@ public class ClientTester extends Application{
     public void sendMatchRequest(String category, String subcat){
         client.sendMessage("MATCH_REQUEST:" + category + ":" + subcat);
     }
-
     public void sendMatchRequestToFriend(String category, String subcat){
         client.sendMessage("FRIEND_MATCH_REQUEST:" + category + ":" + subcat);
     }
+
+
 
     public void sendCancelMatchmakingRequest(){
         client.sendMessage("CANCEL_MATCH_REQUEST");
     }
 
-    public void sendAddFriendRequest(String player1, String player2)
-    {
-        client.sendMessage("ADD_FRIEND_REQUEST:" + player1 + ":" + player2);
+    public void sendLeaderboardRequest(String category){
+        client.sendMessage("SEND_LEADERBOARD:" + category);
     }
 
-
-    
     public void sendDisconnectRequest(){
         client.sendMessage("DISCONNECT");
         client.close();
@@ -428,5 +462,31 @@ public class ClientTester extends Application{
             System.err.println("Flag image not found or failed to load.");
         }
         return null;
+    }
+
+    public void sendAddFriendRequest(String n1, String n2){
+        client.sendMessage("ADD_FRIEND_REQUEST:" + n1 + ":" + n2        );
+    }
+
+    public void sendUserInfoRequest() {
+        client.sendMessage("USER_INFO_REQUEST");
+    }
+
+    public void sendGetFriendRequests(){
+        client.sendMessage("GET_FRIEND_REQUESTS");
+    }
+
+    public void showUserInfoPage(String s){
+        new UserInfoPage(this, s).show(primaryStage);
+    }
+
+    public void sendAcceptFriendRequest(String currentPlayer, int senderId) {
+        client.sendMessage("ADD_FRIEND:" + senderId);
+    }
+
+    private void style(Button... buttons) {
+        for (Button b : buttons) {
+            b.setStyle("-fx-font-size: 16px; -fx-background-color: rgba(50, 50, 50, 0.8); -fx-text-fill: white; -fx-padding: 10px 20px; -fx-background-radius: 10;");
+        }
     }
 }

@@ -22,7 +22,7 @@ public class GeographySubcategoryPage {
         title.setFont(Font.font("Georgia", 40));
         title.setFill(Color.GOLD);
 
-        Button subcat1Button = new Button("SUBCAT");
+        Button subcat1Button = new Button("Flags");
         Button backButton = new Button("Back");
 
         style(subcat1Button, backButton);

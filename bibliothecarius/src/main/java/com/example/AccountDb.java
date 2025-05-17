@@ -219,6 +219,44 @@ public class AccountDb {
         }
     }
 
+    public static String displayUserInfo(String username) throws SQLException {
+        int userId = getUserIDFromName(username);
+        String result = ""; 
+        try (Connection conn = connect()) {
+            String userSql = "SELECT NAME FROM UserAccounts WHERE ID = ?;";
+            try (PreparedStatement statement = conn.prepareStatement(userSql)) {
+                statement.setInt(1, userId);
+                ResultSet rs = statement.executeQuery();
+                if (rs.next()) {
+                    result += ("User: " + rs.getString("NAME") + "*");
+                }
+            }
+
+            String scoreSql = "SELECT category, points FROM scores WHERE user_id = ?;";
+            try (PreparedStatement statement = conn.prepareStatement(scoreSql)) {
+                statement.setInt(1, userId);
+                ResultSet rs = statement.executeQuery();
+                result+=("Scores:*");
+                while (rs.next()) {
+                    result += (" - " + rs.getString("category") + ": " + rs.getInt("points") +"*");
+                }
+            }
+
+            String friendSql = "SELECT UA.ID, UA.NAME FROM friends F " +
+                   "JOIN UserAccounts UA ON F.friend_id = UA.ID " +
+                   "WHERE F.user_id = ?;";
+            try (PreparedStatement statement = conn.prepareStatement(friendSql)) {
+                statement.setInt(1, userId);
+                ResultSet rs = statement.executeQuery();
+                result += ("Friends:*");
+                while (rs.next()) {
+                    result += (" - " + rs.getString("NAME") + " (ID: " + rs.getInt("ID") + ")*");
+                }
+            }
+            return result;
+        }
+    }
+
        public static String getLeaderboard(String category) throws SQLException {
 
         String result = new String();
@@ -273,8 +311,7 @@ public class AccountDb {
     public static int sendFriendRequest(int senderId, String receiverName) throws SQLException {
         String getReceiverIdQuery = "SELECT ID FROM UserAccounts WHERE NAME = ?";
         try (Connection conn = connect();
-             PreparedStatement ps = conn.prepareStatement(getReceiverIdQuery))
-             {
+            PreparedStatement ps = conn.prepareStatement(getReceiverIdQuery)){
 
             ps.setString(1, receiverName);
             ResultSet rs = ps.executeQuery();
@@ -286,11 +323,16 @@ public class AccountDb {
 
             if (areFriends(senderId, receiverId)) return 0; // already friends
 
-            String check = "SELECT status FROM friends WHERE user_id = ? AND friend_id = ?";
+            String check = """
+                            SELECT status FROM friends 
+                            WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)
+                            """;
             try (PreparedStatement checkStmt = conn.prepareStatement(check))
             {
                 checkStmt.setInt(1, senderId);
                 checkStmt.setInt(2, receiverId);
+                checkStmt.setInt(3, receiverId);
+                checkStmt.setInt(4,senderId);
                 ResultSet checkRs = checkStmt.executeQuery();
                 if (checkRs.next())
                 {
@@ -378,6 +420,7 @@ public class AccountDb {
                 String name = rs.getString("NAME");
                 result.append(id).append(":").append(name).append("*");
             }
+            
         }
 
         // Remove trailing '*' if present

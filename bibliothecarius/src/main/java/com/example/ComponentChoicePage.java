@@ -33,8 +33,8 @@ public class ComponentChoicePage {
         style(randomButton, friendsButton);
 
         randomButton.setOnAction(e -> {app.sendMatchRequest(category, subcat); app.showLoadingPage();});
-        // friendsButton.setOnAction(e -> app.showPlayWithFriendsPage());
-        friendsButton.setOnAction(e -> {app.sendMatchRequestToFriend(category, subcat); app.showLoadingPage();});
+
+        friendsButton.setOnAction(e -> {app.showLoadingPage(); app.sendMatchRequestToFriend(category, subcat); });
         VBox vbox = new VBox(20, title, randomButton, friendsButton);
         vbox.setAlignment(Pos.CENTER);
 

@@ -57,7 +57,7 @@ public class MatchmakingManager {
             while (notFound && friendQueueIteratorMovie.hasNext()) {
                 ClientHandler name = friendQueueIteratorMovie.next();
                 try {
-                    if(AccountDb.areFriends(name.getUsername(), player.getUsername())){
+                    if(AccountDb.areFriends(name.getUsername(), player.getUsername())){ // instead of removing these can easily be printed and chosen from
                         friendQueueIteratorMovie.remove();
                         startMatch(player, name, "MOVIE", subcat);
                         notFound = false;

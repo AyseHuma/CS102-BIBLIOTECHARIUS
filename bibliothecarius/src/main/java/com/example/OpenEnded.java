@@ -32,7 +32,9 @@ public class OpenEnded extends Question{
         questionTextArea.setEditable(false);
         questionTextArea.setPrefHeight(100);
 
-        TextField answerInputArea = new TextField("Answer Here");
+        TextField answerInputArea = new TextField();
+        answerInputArea.setPromptText("ANSWER HERE");
+
         answerInputArea.setPrefHeight(100);
         System.out.println(answer);
         answerInputArea.setOnAction(createAction(stage, answerInputArea));

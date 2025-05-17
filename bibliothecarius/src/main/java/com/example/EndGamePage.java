@@ -1,7 +1,5 @@
 package com.example;
 
-import java.sql.SQLException;
-
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -53,14 +51,14 @@ public class EndGamePage {
         styleButton(friendsButton);
 
         newGameButton.setOnAction(e -> app.showGameStartPage());
-        leaderboardButton.setOnAction(e -> app.showMainPage());
+        leaderboardButton.setOnAction(e -> app.sendLeaderboardRequest(category));
         friendsButton.setOnAction(e -> {app.sendAddFriendRequest(player1Name, player2Name);});
 
-        HBox playerInfoBox = new HBox(50, player1Text, player2Text, friendsButton);
+        HBox playerInfoBox = new HBox(50, player1Text, player2Text);
         playerInfoBox.setAlignment(Pos.CENTER);
-        playerInfoBox.setPadding(new Insets(0, 50, 0,    50));
+        playerInfoBox.setPadding(new Insets(0, 50, 0, 50));
 
-        VBox buttonBox = new VBox(20, newGameButton, leaderboardButton);
+        VBox buttonBox = new VBox(20, newGameButton, leaderboardButton,friendsButton);
         buttonBox.setAlignment(Pos.CENTER);
 
         VBox layout = new VBox(25, title, scoreHeader, playerInfoBox, buttonBox);

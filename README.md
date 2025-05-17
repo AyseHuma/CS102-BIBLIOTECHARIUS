@@ -5,4 +5,4 @@ To start the application first start server by running ServerMain.java on one co
 JavaFX was used to build GUI and JDBC for database connectivity.
 
 ## WARNING
-The book category is not available as the imdb-data db is too large
+The book category is not available as the imdb-data db is too large. You can download it and place it under lib using this link https://drive.google.com/file/d/10Nex5EsDVbQE3U7HoiZ4O9-azKocCf2b/view?usp=drive_link
